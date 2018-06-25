@@ -53,8 +53,8 @@ def optimize_model(memory, batch_size):
     transitions = memory.sample(batch_size)
     batch = utils.Transition(*zip(*transitions))
 
-    next_state_batch = torch.stack(batch.next_state)
-    state_batch = torch.stack(batch.state)
+    next_state_batch = torch.stack(batch.next_state).to(device)
+    state_batch = torch.stack(batch.state).to(device)
     action_batch = torch.stack(batch.action)
     reward_batch = torch.stack(batch.reward)
     done_batch = torch.stack(batch.done)
@@ -96,8 +96,8 @@ for n in range(n_episodes):
         next_state = preprocess(next_state)
         reward = torch.tensor([reward], device=device)
         done = torch.tensor([float(done)], device=device)
-        memory.push(torch.from_numpy(state).to(device), action,
-                    torch.from_numpy(next_state).to(device), reward, done)
+        memory.push(torch.from_numpy(state), action,
+                    torch.from_numpy(next_state), reward, done)
         vis.image(state, win=win1)
         state = next_state.copy()
 
