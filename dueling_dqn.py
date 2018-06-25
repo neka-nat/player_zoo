@@ -40,7 +40,6 @@ class DuelingDQN(nn.Module):
 
 # This is based on the code from gym.
 BATCH_SIZE = 128
-GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 200
@@ -55,7 +54,7 @@ target_net.eval()
 optimizer = optim.RMSprop(policy_net.parameters())
 memory = replay_memory.ReplayMemory(10000)
 
-def optimize_model(memory, batch_size):
+def optimize_model(memory, batch_size, gamma=0.999):
     if len(memory) < batch_size:
         return
     transitions = memory.sample(batch_size)
@@ -74,7 +73,7 @@ def optimize_model(memory, batch_size):
     # Compute V(s_{t+1}) for all next states.
     next_state_values = target_net(next_state_batch).max(1)[0].unsqueeze(1).detach()
     # Compute the expected Q values
-    expected_state_action_values = (next_state_values * GAMMA * (1.0 - done_batch)) + reward_batch
+    expected_state_action_values = (next_state_values * gamma * (1.0 - done_batch)) + reward_batch
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
