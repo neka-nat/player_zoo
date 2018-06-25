@@ -8,10 +8,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import visdom
 import replay_memory
 import utils
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+vis = visdom.Visdom()
 
 class DQN(nn.Module):
     def __init__(self, n_action):
@@ -75,10 +77,13 @@ def optimize_model(memory, batch_size):
     for param in policy_net.parameters():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
+    return state_action_values.cpu().mean().detach().numpy()
 
 steps_done = 0
 n_episodes = 50
 preprocess = lambda s: np.ascontiguousarray(s.transpose((2, 0, 1)), dtype=np.float32) / 255
+win1 = vis.image(preprocess(env.reset()))
+win2 = vis.line(X=np.array([0]), Y=np.array([0.0]))
 for n in range(n_episodes):
     # Initialize the environment and state
     state = preprocess(env.reset())
@@ -93,14 +98,16 @@ for n in range(n_episodes):
         done = torch.tensor([float(done)], device=device)
         memory.push(torch.from_numpy(state).to(device), action,
                     torch.from_numpy(next_state).to(device), reward, done)
+        vis.image(state, win=win1)
         state = next_state.copy()
-        env.render()
 
         # Perform one step of the optimization (on the target network)
-        optimize_model(memory, BATCH_SIZE)
+        q_val = optimize_model(memory, BATCH_SIZE)
         steps_done += 1
         if done:
             break
+    print("Episode: %d, Qval: %f" % (n, q_val))
+    vis.line(X=np.array([n]), Y=np.array([q_val]), win=win2, update='append')
     # Update the target network
     if n % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
