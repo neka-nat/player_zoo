@@ -15,20 +15,28 @@ import utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
 
-class DQN(nn.Module):
+class DuelingDQN(nn.Module):
     def __init__(self, n_action):
         super(DQN, self).__init__()
         self.n_action = n_action
         self.conv1 = nn.Conv2d(3, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.head = nn.Linear(22528, self.n_action)
+        self.adv1 = nn.Linear(22528, 128)
+        self.adv2 = nn.Linear(128, self.n_action)
+        self.val1 = nn.Linear(22528, 128)
+        self.val2 = nn.Linear(128, 1)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
-        return self.head(x.view(x.size(0), -1))
+        x = x.view(x.size(0), -1)
+        adv = F.relu(self.adv1(x))
+        adv = self.adv2(adv)
+        val = F.relu(self.val1(x))
+        val = self.val2(val)
+        return val + adv - adv.mean()
 
 # This is based on the code from gym.
 BATCH_SIZE = 128
@@ -39,8 +47,8 @@ EPS_DECAY = 200
 TARGET_UPDATE = 10
 
 env = gym.make('Breakout-v0')
-policy_net = DQN(env.action_space.n).to(device)
-target_net = DQN(env.action_space.n).to(device)
+policy_net = DuelingDQN(env.action_space.n).to(device)
+target_net = DuelingDQN(env.action_space.n).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
