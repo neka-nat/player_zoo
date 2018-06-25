@@ -7,3 +7,13 @@ Implementation of Reinforcement learning algorithms.
 ```
 pipenv install
 ```
+
+## Agents
+
+### DQN
+
+https://arxiv.org/abs/1312.5602
+
+### Dueling DQN
+
+https://arxiv.org/abs/1511.06581
