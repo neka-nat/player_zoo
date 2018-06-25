@@ -54,9 +54,9 @@ def optimize_model(memory, batch_size, gamma=0.999):
 
     next_state_batch = torch.stack(batch.next_state).to(device)
     state_batch = torch.stack(batch.state).to(device)
-    action_batch = torch.stack(batch.action)
-    reward_batch = torch.stack(batch.reward)
-    done_batch = torch.stack(batch.done)
+    action_batch = torch.stack(batch.action).to(device)
+    reward_batch = torch.stack(batch.reward).to(device)
+    done_batch = torch.stack(batch.done).to(device)
 
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken
@@ -76,7 +76,6 @@ def optimize_model(memory, batch_size, gamma=0.999):
     for param in policy_net.parameters():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
-    return state_action_values.cpu().mean().detach().numpy()
 
 steps_done = 0
 n_episodes = 10000
@@ -85,27 +84,29 @@ win2 = vis.line(X=np.array([0]), Y=np.array([0.0]))
 for n in range(n_episodes):
     # Initialize the environment and state
     state = utils.preprocess(env.reset())
+    sum_rwd = 0
     for t in count():
         # Select and perform an action
         eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * steps_done / EPS_DECAY)
         action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
-                                      policy_net, eps, device)
+                                      policy_net, eps)
         next_state, reward, done, _ = env.step(action.item())
         next_state = utils.preprocess(next_state)
-        reward = torch.tensor([reward], device=device)
-        done = torch.tensor([float(done)], device=device)
+        reward = torch.tensor([reward])
+        done = torch.tensor([float(done)])
         memory.push(torch.from_numpy(state), action,
                     torch.from_numpy(next_state), reward, done)
         vis.image(state, win=win1)
         state = next_state.copy()
 
         # Perform one step of the optimization (on the target network)
-        q_val = optimize_model(memory, BATCH_SIZE)
+        optimize_model(memory, BATCH_SIZE)
+        sum_rwd += reward.numpy()
         steps_done += 1
         if done:
             break
-    print("Episode: %d, Qval: %f" % (n, q_val))
-    vis.line(X=np.array([n]), Y=np.array([q_val]), win=win2, update='append')
+    print("Episode: %d, Total Reward: %f" % (n, sum_rwd))
+    vis.line(X=np.array([n]), Y=np.array([sum_rwd]), win=win2, update='append')
     # Update the target network
     if n % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
