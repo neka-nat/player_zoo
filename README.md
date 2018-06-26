@@ -25,4 +25,4 @@ pipenv install
 
 ## Visdom
 
-![visdom](visdom.gif)
+![visdom](images/visdom.gif)
