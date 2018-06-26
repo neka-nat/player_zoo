@@ -1,5 +1,5 @@
 import random
-import utils
+from libs import utils
 
 class ReplayMemory(object):
     def __init__(self, capacity):

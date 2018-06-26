@@ -9,8 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import visdom
-import replay_memory
-import utils
+from libs import replay_memory, utils
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
