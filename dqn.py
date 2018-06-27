@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import visdom
-from libs import replay_memory, utils
+from libs import replay_memory, utils, wrapped_env
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
@@ -18,10 +18,10 @@ class DQN(nn.Module):
     def __init__(self, n_action):
         super(DQN, self).__init__()
         self.n_action = n_action
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.head = nn.Linear(22528, self.n_action)
+        self.head = nn.Linear(3136, self.n_action)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -36,7 +36,7 @@ EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10
 
-env = gym.make('Breakout-v0')
+env = gym.make('MultiFrameBreakout-v0')
 policy_net = DQN(env.action_space.n).to(device)
 target_net = DQN(env.action_space.n).to(device)
 target_net.load_state_dict(policy_net.state_dict())
@@ -78,11 +78,11 @@ def optimize_model(memory, batch_size, gamma=0.999):
 
 steps_done = 0
 n_episodes = 10000
-win1 = vis.image(utils.preprocess(env.reset()))
+win1 = vis.image(utils.preprocess(env.env._get_image()))
 win2 = vis.line(X=np.array([0]), Y=np.array([0.0]))
 for n in range(n_episodes):
     # Initialize the environment and state
-    state = utils.preprocess(env.reset())
+    state = env.reset()
     sum_rwd = 0
     for t in count():
         # Select and perform an action
@@ -90,12 +90,11 @@ for n in range(n_episodes):
         action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
                                       policy_net, eps)
         next_state, reward, done, _ = env.step(action.item())
-        next_state = utils.preprocess(next_state)
         reward = torch.tensor([reward])
         done = torch.tensor([float(done)])
         memory.push(torch.from_numpy(state), action,
                     torch.from_numpy(next_state), reward, done)
-        vis.image(state, win=win1)
+        vis.image(utils.preprocess(env.env._get_image()), win=win1)
         state = next_state.copy()
 
         # Perform one step of the optimization (on the target network)
