@@ -5,8 +5,8 @@ from libs import utils
 
 class MultiFrameAtariEnv(AtariEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
-    def __init__(self, game='pong', obs_type='ram', frameskip=(2, 5), repeat_action_probability=0.):
-        super(MultiFrameAtariEnv, self).__init__(game, obs_type, frameskip, repeat_action_probability)
+    def __init__(self, game='pong', obs_type='image', frameskip=4, repeat_action_probability=0.):
+        super(MultiFrameAtariEnv, self).__init__(game, obs_type, 1, repeat_action_probability)
         self._img_buf = deque(maxlen=4)
         self._shape = (84, 84)
         self._init_buf()
@@ -17,9 +17,14 @@ class MultiFrameAtariEnv(AtariEnv):
             self._img_buf.append(utils.preprocess(st, self._shape, True))
 
     def step(self, a):
-        nx_st, rwd, done, info = super(MultiFrameAtariEnv, self).step(a)
-        self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
-        return np.array(list(self._img_buf)), rwd, done, info
+        reward = 0.0
+        infos = {}
+        for _ in range(self.frameskip):
+            nx_st, rwd, done, info = super(MultiFrameAtariEnv, self).step(a)
+            reward += rwd
+            infos.update(info)
+            self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
+        return np.array(list(self._img_buf)), reward, done, info
 
     def reset(self):
         st = super(MultiFrameAtariEnv, self).reset()
@@ -32,7 +37,7 @@ from gym.envs.registration import register
 register(
     id='MultiFrameBreakout-v0',
     entry_point='libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'game': 'breakout', 'obs_type': 'image', 'repeat_action_probability': 0.25},
+    kwargs={'game': 'breakout', 'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,
 )
