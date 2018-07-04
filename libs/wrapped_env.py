@@ -7,29 +7,35 @@ class MultiFrameAtariEnv(AtariEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
     def __init__(self, game='pong', obs_type='image', frameskip=4, repeat_action_probability=0.):
         super(MultiFrameAtariEnv, self).__init__(game, obs_type, 1, repeat_action_probability)
+        self._cur_st = None
+        self._nx_st = None
         self._img_buf = deque(maxlen=4)
         self._shape = (84, 84)
-        self._init_buf()
+        self._initialize()
 
-    def _init_buf(self):
+    def _initialize(self):
+        st = super(MultiFrameAtariEnv, self).reset()
         for _ in range(self._img_buf.maxlen):
-            st = super(MultiFrameAtariEnv, self).reset()
             self._img_buf.append(utils.preprocess(st, self._shape, True))
+        self._cur_st = st.copy()
+        self._nx_st = st.copy()
 
     def step(self, a):
         reward = 0.0
         infos = {}
         for _ in range(self.frameskip):
-            nx_st, rwd, done, info = super(MultiFrameAtariEnv, self).step(a)
+            self._cur_st = self._nx_st.copy()
+            self._nx_st, rwd, done, info = super(MultiFrameAtariEnv, self).step(a)
+            nx_st = np.maximum(self._nx_st, self._cur_st)
+            self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
             reward += rwd
             infos.update(info)
-            self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
         return np.array(list(self._img_buf)), reward, done, info
 
     def reset(self):
         st = super(MultiFrameAtariEnv, self).reset()
         self._img_buf.clear()
-        self._init_buf()
+        self._initialize()
         return np.array(list(self._img_buf))
 
 from gym.envs.registration import register
