@@ -20,10 +20,10 @@ class DuelingDQN(nn.Module):
         self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.adv1 = nn.Linear(3136, 128)
-        self.adv2 = nn.Linear(128, self.n_action)
-        self.val1 = nn.Linear(22528, 128)
-        self.val2 = nn.Linear(128, 1)
+        self.adv1 = nn.Linear(3136, 512)
+        self.adv2 = nn.Linear(512, self.n_action)
+        self.val1 = nn.Linear(3136, 512)
+        self.val2 = nn.Linear(512, 1)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))

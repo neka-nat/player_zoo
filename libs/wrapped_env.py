@@ -6,32 +6,33 @@ from libs import utils
 class MultiFrameAtariEnv(AtariEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
     no_op_steps = 30
-    def __init__(self, game='pong', obs_type='image', frameskip=4, repeat_action_probability=0.):
-        super(MultiFrameAtariEnv, self).__init__(game, obs_type, 1, repeat_action_probability)
+    def __init__(self, game='pong', obs_type='image', buf_size=4,
+                 frameskip=4, repeat_action_probability=0.):
+        super(MultiFrameAtariEnv, self).__init__(game, obs_type,
+                                                 frameskip, repeat_action_probability)
         self._cur_st = None
         self._nx_st = None
-        self._img_buf = deque(maxlen=frameskip)
+        self._img_buf = deque(maxlen=buf_size)
         self._shape = (84, 84)
+        self._info = {}
         self._initialize()
 
     def _initialize(self):
         self._nx_st = super(MultiFrameAtariEnv, self).reset()
-        self._cur_st = self._nx_st.copy()
         for _ in range(self._img_buf.maxlen):
-            self._img_buf.append(utils.preprocess(self._cur_st, self._shape, True))
-        for _ in range(np.random.randint(1, self.no_op_steps) // self.frameskip):
+            self._img_buf.append(utils.preprocess(self._nx_st, self._shape, True))
+        for _ in range(np.random.randint(1, self.no_op_steps)):
             self.step(0)
 
     def step(self, a):
-        reward = 0.0
-        infos = {}
-        for _ in range(self.frameskip):
-            self._cur_st = self._nx_st.copy()
-            self._nx_st, rwd, done, info = super(MultiFrameAtariEnv, self).step(a)
-            nx_st = np.maximum(self._nx_st, self._cur_st)
-            self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
-            reward += rwd
-            infos.update(info)
+        self._cur_st = self._nx_st.copy()
+        self._nx_st, reward, done, info = super(MultiFrameAtariEnv, self).step(a)
+        nx_st = np.maximum(self._nx_st, self._cur_st)
+        self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
+        if 'ale.lives' in self._info:
+            done |= self._info['ale.lives'] > info['ale.lives']
+        else:
+            self._info.update(info)
         return np.array(list(self._img_buf)), reward, done, info
 
     def reset(self):
