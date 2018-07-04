@@ -39,7 +39,7 @@ class DuelingDQN(nn.Module):
 BATCH_SIZE = 32
 EPS_START = 1.0
 EPS_END = 0.1
-EPS_DECAY = 1000000
+EPS_DECAY = 100000
 TARGET_UPDATE = 50
 
 env = gym.make('MultiFrameBreakout-v0')

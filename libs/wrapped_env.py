@@ -21,7 +21,7 @@ class MultiFrameAtariEnv(AtariEnv):
         self._nx_st = super(MultiFrameAtariEnv, self).reset()
         for _ in range(self._img_buf.maxlen):
             self._img_buf.append(utils.preprocess(self._nx_st, self._shape, True))
-        for _ in range(np.random.randint(1, self.no_op_steps)):
+        for _ in range(np.random.randint(1, self.no_op_steps) // self.frameskip):
             self.step(0)
 
     def step(self, a):
