@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import gym
-import random
 import numpy as np
 from itertools import count
 
@@ -29,12 +28,11 @@ class DQN(nn.Module):
         x = F.relu(self.conv3(x))
         return self.head(x.view(x.size(0), -1))
 
-# This is based on the code from gym.
-BATCH_SIZE = 128
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
-TARGET_UPDATE = 10
+BATCH_SIZE = 32
+EPS_START = 1.0
+EPS_END = 0.1
+EPS_DECAY = 1000000
+TARGET_UPDATE = 50
 
 env = gym.make('MultiFrameBreakout-v0')
 policy_net = DQN(env.action_space.n).to(device)
@@ -43,7 +41,7 @@ target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
 optimizer = optim.RMSprop(policy_net.parameters())
-memory = replay_memory.ReplayMemory(10000)
+memory = replay_memory.ReplayMemory(50000)
 
 def optimize_model(memory, batch_size, gamma=0.999):
     if len(memory) < batch_size:
@@ -72,14 +70,14 @@ def optimize_model(memory, batch_size, gamma=0.999):
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
-    for param in policy_net.parameters():
-        param.grad.data.clamp_(-1, 1)
     optimizer.step()
 
 steps_done = 0
-n_episodes = 10000
+n_episodes = 20000
 win1 = vis.image(utils.preprocess(env.env._get_image()))
-win2 = vis.line(X=np.array([0]), Y=np.array([0.0]))
+win2 = vis.image(env.reset())
+win3 = vis.line(X=np.array([0]), Y=np.array([0.0]),
+                opts=dict(title='Score'))
 for n in range(n_episodes):
     # Initialize the environment and state
     state = env.reset()
@@ -95,6 +93,7 @@ for n in range(n_episodes):
         memory.push(torch.from_numpy(state), action,
                     torch.from_numpy(next_state), reward, done)
         vis.image(utils.preprocess(env.env._get_image()), win=win1)
+        vis.image(next_state, win=win2)
         state = next_state.copy()
 
         # Perform one step of the optimization (on the target network)
@@ -104,7 +103,7 @@ for n in range(n_episodes):
         if done:
             break
     print("Episode: %d, Total Reward: %f" % (n, sum_rwd))
-    vis.line(X=np.array([n]), Y=np.array([sum_rwd]), win=win2, update='append')
+    vis.line(X=np.array([n]), Y=np.array([sum_rwd]), win=win3, update='append')
     # Update the target network
     if n % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
