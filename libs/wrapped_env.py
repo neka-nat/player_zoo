@@ -5,20 +5,22 @@ from libs import utils
 
 class MultiFrameAtariEnv(AtariEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
+    no_op_steps = 30
     def __init__(self, game='pong', obs_type='image', frameskip=4, repeat_action_probability=0.):
         super(MultiFrameAtariEnv, self).__init__(game, obs_type, 1, repeat_action_probability)
         self._cur_st = None
         self._nx_st = None
-        self._img_buf = deque(maxlen=4)
+        self._img_buf = deque(maxlen=frameskip)
         self._shape = (84, 84)
         self._initialize()
 
     def _initialize(self):
-        st = super(MultiFrameAtariEnv, self).reset()
+        self._nx_st = super(MultiFrameAtariEnv, self).reset()
+        self._cur_st = self._nx_st.copy()
         for _ in range(self._img_buf.maxlen):
-            self._img_buf.append(utils.preprocess(st, self._shape, True))
-        self._cur_st = st.copy()
-        self._nx_st = st.copy()
+            self._img_buf.append(utils.preprocess(self._cur_st, self._shape, True))
+        for _ in range(np.random.randint(1, self.no_op_steps) // self.frameskip):
+            self.step(0)
 
     def step(self, a):
         reward = 0.0
@@ -33,7 +35,6 @@ class MultiFrameAtariEnv(AtariEnv):
         return np.array(list(self._img_buf)), reward, done, info
 
     def reset(self):
-        st = super(MultiFrameAtariEnv, self).reset()
         self._img_buf.clear()
         self._initialize()
         return np.array(list(self._img_buf))
