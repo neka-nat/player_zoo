@@ -14,7 +14,6 @@ class MultiFrameAtariEnv(AtariEnv):
         self._nx_st = None
         self._img_buf = deque(maxlen=buf_size)
         self._shape = (84, 84)
-        self._info = {}
         self._initialize()
 
     def _initialize(self):
@@ -29,10 +28,6 @@ class MultiFrameAtariEnv(AtariEnv):
         self._nx_st, reward, done, info = super(MultiFrameAtariEnv, self).step(a)
         nx_st = np.maximum(self._nx_st, self._cur_st)
         self._img_buf.append(utils.preprocess(nx_st, self._shape, True))
-        if 'ale.lives' in self._info:
-            done |= self._info['ale.lives'] > info['ale.lives']
-        else:
-            self._info.update(info)
         return np.array(list(self._img_buf)), reward, done, info
 
     def reset(self):
