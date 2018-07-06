@@ -42,7 +42,7 @@ target_net = DQN(env.action_space.n).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
-optimizer = optim.RMSprop(policy_net.parameters())
+optimizer = optim.RMSprop(policy_net.parameters(), lr=0.00025, alpha=0.95, eps=0.01)
 memory = replay_memory.ReplayMemory(50000)
 
 def optimize_model(memory, batch_size, gamma=0.999):
