@@ -77,7 +77,7 @@ def optimize_model(memory, batch_size, gamma=0.999):
     optimizer.step()
 
 steps_done = 0
-n_episodes = 100000
+n_episodes = 20000
 win1 = vis.image(utils.preprocess(env.env._get_image()))
 win2 = vis.image(env.reset())
 win3 = vis.line(X=np.array([0]), Y=np.array([0.0]),
