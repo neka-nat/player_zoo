@@ -8,6 +8,12 @@ Implementation of Reinforcement learning algorithms.
 pipenv install
 ```
 
+Run visdom server.
+
+```
+python -m visdom.server
+```
+
 ## Agents
 
 ### DQN
@@ -22,6 +28,9 @@ pipenv install
 
 * https://arxiv.org/abs/1511.06581
 
+### Prioritized Experience Replay
+
+* https://arxiv.org/abs/1511.05952
 
 ## Visdom
 
