@@ -7,6 +7,9 @@ import torch
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
 
+ActorCriticData = namedtuple('ActorCriticData',
+                             ('value', 'log_prob', 'reward', 'entropy'))
+
 def preprocess(img, shape=None, gray=False):
     pil_img = Image.fromarray(img)
     if not shape is None:

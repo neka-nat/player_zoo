@@ -32,6 +32,10 @@ python -m visdom.server
 
 * https://arxiv.org/abs/1511.05952
 
+### A3C
+
+* https://arxiv.org/abs/1602.01783
+
 ## Visdom
 
 ![visdom](images/visdom.gif)
