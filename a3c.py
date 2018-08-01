@@ -56,7 +56,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
     state = env.reset()
     win1 = vis.image(utils.preprocess(env.env._get_image()))
 
-    while True:
+    for t in count():
         model.sync(global_model)
         buffer = []
         for step in range(n_steps):
