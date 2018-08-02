@@ -60,6 +60,8 @@ python -m visdom.server
 
 * https://arxiv.org/abs/1509.02971
 
-## Visdom
+## Images
 
 ![visdom](images/visdom.gif)
+
+![roboschool](images/roboschool.png)
