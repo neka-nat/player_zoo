@@ -1,4 +1,4 @@
-# agent_zoo
+# player_zoo
 
 Implementation of Reinforcement learning algorithms.
 
@@ -59,6 +59,10 @@ python -m visdom.server
 ### DDPG
 
 * https://arxiv.org/abs/1509.02971
+
+### TRPO
+
+* https://arxiv.org/abs/1502.05477
 
 ## Images
 
