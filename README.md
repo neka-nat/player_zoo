@@ -64,6 +64,10 @@ python -m visdom.server
 
 * https://arxiv.org/abs/1502.05477
 
+### CEM
+
+* http://learning.mpi-sws.org/mlss2016/slides/2016-MLSS-RL.pdf
+
 ## Images
 
 ![visdom](images/visdom.gif)
