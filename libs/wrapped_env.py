@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+from gym import spaces
 from gym.envs.atari.atari_env import AtariEnv
 from libs import utils
 
@@ -14,6 +15,7 @@ class MultiFrameAtariEnv(AtariEnv):
         self._nx_st = None
         self._img_buf = deque(maxlen=buf_size)
         self._shape = (84, 84)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(self._shape[0], self._shape[1], buf_size), dtype=np.uint8)
         self._initialize()
 
     def _initialize(self):

@@ -15,6 +15,7 @@ visdom = "*"
 "44eff87" = {path = "./roboschool", editable = true}
 
 [dev-packages]
+pylint = "*"
 
 [requires]
 python_version = "3.6"
