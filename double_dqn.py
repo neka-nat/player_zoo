@@ -8,27 +8,10 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import visdom
-from libs import replay_memory, utils, wrapped_env
+from libs import replay_memory, utils, wrapped_env, models
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
-
-class DQN(nn.Module):
-    def __init__(self, n_action):
-        super(DQN, self).__init__()
-        self.n_action = n_action
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.fc1 = nn.Linear(3136, 512)
-        self.fc2 = nn.Linear(512, self.n_action)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = F.relu(self.fc1(x.view(x.size(0), -1)))
-        return self.fc2(x)
 
 # This is based on the code from gym.
 BATCH_SIZE = 32
@@ -38,8 +21,8 @@ EPS_DECAY = 100000
 TARGET_UPDATE = 50
 
 env = gym.make('MultiFrameBreakout-v0')
-policy_net = DQN(env.action_space.n).to(device)
-target_net = DQN(env.action_space.n).to(device)
+policy_net = models.DQN(env.action_space.n).to(device)
+target_net = models.DQN(env.action_space.n).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 

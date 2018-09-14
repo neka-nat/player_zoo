@@ -14,15 +14,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
 
 class DuelingDQN(nn.Module):
-    def __init__(self, n_action):
+    def __init__(self, n_action, input_shape=(84, 84, 4)):
         super(DuelingDQN, self).__init__()
         self.n_action = n_action
         self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.adv1 = nn.Linear(3136, 512)
+        r = int((int(input_shape[0] / 4) - 1) / 2) - 3
+        c = int((int(input_shape[1] / 4) - 1) / 2) - 3
+        self.adv1 = nn.Linear(r * c * 64, 512)
         self.adv2 = nn.Linear(512, self.n_action)
-        self.val1 = nn.Linear(3136, 512)
+        self.val1 = nn.Linear(r * c * 64, 512)
         self.val2 = nn.Linear(512, 1)
 
     def forward(self, x):
