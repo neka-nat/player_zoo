@@ -3,6 +3,7 @@ import gym
 import roboschool
 import numpy as np
 from itertools import count
+from OpenGL import GLU
 
 import torch
 import torch.nn as nn
@@ -11,7 +12,7 @@ import torch.nn.functional as F
 import visdom
 from libs import replay_memory, utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#vis = visdom.Visdom()
+vis = visdom.Visdom()
 
 def soft_update(dst, src, tau=0.001):
     for dp, sp in zip(dst.parameters(), src.parameters()):
@@ -109,7 +110,8 @@ def optimize_model(memory, batch_size, criterion=nn.MSELoss(), gamma=0.999):
 steps_done = 0
 n_episodes = 20000
 memory = replay_memory.ReplayMemory(50000)
-
+win = vis.line(X=np.array([0]), Y=np.array([0.0]),
+               opts=dict(title='Score'))
 for n in range(n_episodes):
     # Initialize the environment and state
     state = env.reset()
@@ -134,6 +136,7 @@ for n in range(n_episodes):
         if done:
             break
     print("Episode: %d, Total Reward: %f" % (n, sum_rwd))
+    vis.line(X=np.array([n]), Y=np.array([sum_rwd]), win=win, update='append')
 
 print('Complete')
 env.close()
