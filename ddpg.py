@@ -34,35 +34,39 @@ class OUNoise:
         return self.state
 
 class Actor(nn.Module):
-    def __init__(self, n_action, n_state):
+    def __init__(self, n_action, n_state, init_w=3e-3):
         super(Actor, self).__init__()
         self.fc1 = nn.Linear(n_state, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, n_action)
+        self.fc3.weight.data.uniform_(-init_w, init_w)
+        self.fc3.bias.data.uniform_(-init_w, init_w)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        x = F.tanh(self.fc3(x))
         return x
 
 class Critic(nn.Module):
-    def __init__(self, n_action, n_state):
+    def __init__(self, n_action, n_state, init_w=3e-3):
         super(Critic, self).__init__()
         self.fc1 = nn.Linear(n_state + n_action, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, 1)
+        self.fc3.weight.data.uniform_(-init_w, init_w)
+        self.fc3.bias.data.uniform_(-init_w, init_w)
 
     def forward(self, x):
         s, a = x
         x = F.relu(self.fc1(torch.cat([s, a], 1)))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        x = self.fc3(x)
         return x
 
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 EPS_START = 1.0
-EPS_END = 0.01
+EPS_END = 0.1
 EPS_DECAY = 100000
 
 env = gym.make("RoboschoolAnt-v1")
@@ -109,23 +113,28 @@ def optimize_model(memory, batch_size, criterion=nn.MSELoss(), gamma=0.999):
 
 steps_done = 0
 n_episodes = 20000
+warmup = 1000
 memory = replay_memory.ReplayMemory(50000)
 win = vis.line(X=np.array([0]), Y=np.array([0.0]),
                opts=dict(title='Score'))
 for n in range(n_episodes):
     # Initialize the environment and state
-    state = env.reset()
+    state = env.reset().astype(np.float32)
     noise.reset()
     sum_rwd = 0
     for t in count():
         # Perform an action
-        eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * steps_done / EPS_DECAY)
-        action = actor(torch.tensor(state).to(device)).detach().cpu() + eps * torch.from_numpy(noise())
-        next_state, reward, done, _ = env.step(action.numpy())
+        if steps_done < warmup:
+            action = np.random.uniform(-1.0, 1.0, env.action_space.shape[0]).astype(np.float32)
+        else:
+            eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * steps_done / EPS_DECAY)
+            action = actor(torch.tensor(state).to(device)).detach().cpu().numpy() + eps * noise()
+        next_state, reward, done, _ = env.step(action)
+        next_state = next_state.astype(np.float32)
         env.render()
         reward = torch.tensor([reward])
         done = torch.tensor([float(done)])
-        memory.push(torch.from_numpy(state), action,
+        memory.push(torch.from_numpy(state), torch.from_numpy(action),
                     torch.from_numpy(next_state), reward, done)
         state = next_state.copy()
 
