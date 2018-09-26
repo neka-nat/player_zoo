@@ -73,4 +73,4 @@ python -m visdom.server
 
 ![visdom](images/visdom.gif)
 
-![roboschool](images/roboschool.png)
+![roboschool](images/roboschool.gif)

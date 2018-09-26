@@ -69,7 +69,7 @@ EPS_START = 1.0
 EPS_END = 0.1
 EPS_DECAY = 100000
 
-env = gym.make("RoboschoolAnt-v1")
+env = gym.make("RoboschoolInvertedDoublePendulum-v1")
 noise = OUNoise(env.action_space.shape[0])
 actor = Actor(env.action_space.shape[0], env.observation_space.shape[0]).to(device)
 target_actor = Actor(env.action_space.shape[0], env.observation_space.shape[0]).to(device)
