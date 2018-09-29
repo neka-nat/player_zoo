@@ -56,7 +56,11 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
     model = ActorCritic(env.action_space.n)
     model.train()
     state = env.reset()
+    sum_rwd = 0.0
+    n_episode = 0
     win1 = vis.image(utils.preprocess(env.env._get_image()))
+    win2 = vis.line(X=np.array([0]), Y=np.array([0.0]),
+                    opts=dict(title='Score'))
 
     for t in count():
         model.sync(global_model)
@@ -65,9 +69,14 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
             action, value, log_prob, entropy = model.act(torch.from_numpy(state).unsqueeze(0))
             state, reward, done, _ = env.step(action.item())
             buffer.append(utils.ActorCriticData(value, log_prob, reward, entropy))
+            sum_rwd += reward
             vis.image(utils.preprocess(env.env._get_image()), win=win1)
             if done:
+                vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]), win=win2, update='append')
+                print("Episode: %d, Total Reward: %f" % (n_episode, sum_rwd))
                 state = env.reset()
+                sum_rwd = 0.0
+                n_episode += 1
                 break
 
         R = torch.zeros(1, 1)
