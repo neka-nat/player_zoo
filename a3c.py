@@ -38,7 +38,7 @@ class ActorCritic(nn.Module):
         prob = F.softmax(logit, dim=1)
         log_prob = F.log_softmax(logit, dim=1)
         entropy = -(log_prob * prob).sum(dim=1, keepdim=True)
-        action = prob.multinomial(num_samples=1)
+        action = prob.multinomial(num_samples=1).detach()
         return action, value, log_prob.gather(1, action), entropy
 
     def sync_grads(self, model):
@@ -82,6 +82,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
         R = torch.zeros(1, 1)
         if not done:
             _, R, _, _ = model.act(torch.from_numpy(state).unsqueeze(0))
+            R = R.detach()
 
         buffer.append(utils.ActorCriticData(R, None, None, None))
         policy_loss = 0
