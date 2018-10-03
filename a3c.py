@@ -20,17 +20,18 @@ class ActorCritic(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         r = int((int(input_shape[0] / 4) - 1) / 2) - 3
         c = int((int(input_shape[1] / 4) - 1) / 2) - 3
-        self.fc= nn.Linear(r * c * 64, 512)
+        self.lstm = nn.LSTMCell(r * c * 64, 512)
         self.pi = nn.Linear(512, self.n_action)
         self.v = nn.Linear(512, 1)
+        self.reset(True)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
-        x = F.relu(self.fc(x.view(x.size(0), -1)))
-        logit = self.pi(x)
-        value = self.v(x)
+        self.hx, self.cx = self.lstm(x.view(x.size(0), -1), (self.hx, self.cx))
+        logit = self.pi(self.hx)
+        value = self.v(self.hx)
         return logit, value
 
     def act(self, x):
@@ -40,6 +41,14 @@ class ActorCritic(nn.Module):
         entropy = -(log_prob * prob).sum(dim=1, keepdim=True)
         action = prob.multinomial(num_samples=1).detach()
         return action, value, log_prob.gather(1, action), entropy
+
+    def reset(self, done=False):
+        if done:
+            self.cx = torch.zeros(1, 512)
+            self.hx = torch.zeros(1, 512)
+        else:
+            self.cx = self.cx.detach()
+            self.hx = self.hx.detach()
 
     def sync_grads(self, model):
         for p, op in zip(self.parameters(), model.parameters()):
@@ -101,6 +110,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
         model.sync_grads(global_model)
         optimizer.step()
+        model.reset(done)
 
 import torch.multiprocessing as mp
 if __name__ == '__main__':
