@@ -40,9 +40,25 @@ class MultiFrameAtariEnv(AtariEnv):
 from gym.envs.registration import register
 
 register(
+    id='MultiFramePong-v0',
+    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    kwargs={'obs_type': 'image'},
+    max_episode_steps=10000,
+    nondeterministic=False,
+)
+
+register(
     id='MultiFrameBreakout-v0',
     entry_point='libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'breakout', 'obs_type': 'image'},
+    max_episode_steps=10000,
+    nondeterministic=False,
+)
+
+register(
+    id='MultiFrameSpaceInvaders-v0',
+    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    kwargs={'game': 'space_invaders', 'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,
 )
