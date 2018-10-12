@@ -12,10 +12,10 @@ from libs import replay_memory, utils, optimizers, wrapped_env
 vis = visdom.Visdom()
 
 class ActorCritic(nn.Module):
-    def __init__(self, n_action, input_shape=(84, 84, 4)):
+    def __init__(self, n_action, input_shape=(84, 84, 3)):
         super(ActorCritic, self).__init__()
         self.n_action = n_action
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(input_shape[2], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         r = int((int(input_shape[0] / 4) - 1) / 2) - 3
@@ -61,7 +61,7 @@ class ActorCritic(nn.Module):
 
 def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
           max_grad_norm=50.0, value_loss_coef=0.5, entropy_coef=0.01):
-    env = gym.make('MultiFrameBreakout-v0')
+    env = gym.make('SingleFrameBreakout-v0')
     model = ActorCritic(env.action_space.n)
     model.train()
     state = env.reset()
@@ -75,7 +75,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
         model.sync(global_model)
         buffer = []
         for _ in range(n_steps):
-            action, value, log_prob, entropy = model.act(torch.from_numpy(state).unsqueeze(0))
+            action, value, log_prob, entropy = model.act(torch.from_numpy(state[0]).unsqueeze(0))
             state, reward, done, _ = env.step(action.item())
             buffer.append(utils.ActorCriticData(value, log_prob, reward, entropy))
             sum_rwd += reward
@@ -90,7 +90,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
 
         R = torch.zeros(1, 1)
         if not done:
-            _, R, _, _ = model.act(torch.from_numpy(state).unsqueeze(0))
+            _, R, _, _ = model.act(torch.from_numpy(state[0]).unsqueeze(0))
             R = R.detach()
 
         buffer.append(utils.ActorCriticData(R, None, None, None))
@@ -115,7 +115,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
 import torch.multiprocessing as mp
 if __name__ == '__main__':
     mp.set_start_method('spawn')
-    env = gym.make('MultiFrameBreakout-v0')
+    env = gym.make('SingleFrameBreakout-v0')
     global_model = ActorCritic(env.action_space.n)
     global_model.share_memory()
     optimizer = optimizers.SharedAdam(global_model.parameters(), lr=0.0001)
