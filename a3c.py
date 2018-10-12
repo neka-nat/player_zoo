@@ -103,7 +103,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
             value_loss += 0.5 * advantage.pow(2)
             delta_t = buffer[i].reward + gamma * buffer[i + 1].value - buffer[i].value
             gae = gae * gamma * tau + delta_t
-            policy_loss -= (buffer[i].log_prob * gae + entropy_coef * buffer[i].entropy)
+            policy_loss -= (buffer[i].log_prob * gae.detach() + entropy_coef * buffer[i].entropy)
 
         optimizer.zero_grad()
         (policy_loss + value_loss_coef * value_loss).backward()
