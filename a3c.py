@@ -74,7 +74,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
     for t in count():
         model.sync(global_model)
         buffer = []
-        for step in range(n_steps):
+        for _ in range(n_steps):
             action, value, log_prob, entropy = model.act(torch.from_numpy(state).unsqueeze(0))
             state, reward, done, _ = env.step(action.item())
             buffer.append(utils.ActorCriticData(value, log_prob, reward, entropy))
@@ -100,10 +100,10 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
         for i in reversed(range(len(buffer) - 1)):
             R = gamma * R + buffer[i].reward
             advantage = R - buffer[i].value
-            value_loss = value_loss + 0.5 * advantage.pow(2)
+            value_loss += 0.5 * advantage.pow(2)
             delta_t = buffer[i].reward + gamma * buffer[i + 1].value - buffer[i].value
             gae = gae * gamma * tau + delta_t
-            policy_loss = policy_loss - buffer[i].log_prob * gae - entropy_coef * buffer[i].entropy
+            policy_loss -= (buffer[i].log_prob * gae + entropy_coef * buffer[i].entropy)
 
         optimizer.zero_grad()
         (policy_loss + value_loss_coef * value_loss).backward()
