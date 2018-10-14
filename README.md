@@ -71,6 +71,14 @@ python -m visdom.server
 
 ## Images
 
+### DQN
+
 ![visdom](images/visdom.gif)
 
+### DDPG
+
 ![roboschool](images/roboschool.gif)
+
+### A3C
+
+![a3c](images/a3c.gif)
