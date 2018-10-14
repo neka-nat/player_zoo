@@ -77,7 +77,7 @@ def train(global_model, optimizer, n_steps=20, gamma=0.99, tau=1.0,
         for _ in range(n_steps):
             action, value, log_prob, entropy = model.act(torch.from_numpy(state[0]).unsqueeze(0))
             state, reward, done, _ = env.step(action.item())
-            buffer.append(utils.ActorCriticData(value, log_prob, reward, entropy))
+            buffer.append(utils.ActorCriticData(value, log_prob, max(-1.0, min(reward, 1.0)), entropy))
             sum_rwd += reward
             vis.image(utils.preprocess(env.env._get_image()), win=win1)
             if done:
