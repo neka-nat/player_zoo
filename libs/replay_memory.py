@@ -57,8 +57,8 @@ class PrioritizedMemory(object):
 
         return samples, indices, weights
     
-    def update_priorities(self, batch_indices, batch_priorities):
-        for idx, prio in zip(batch_indices, batch_priorities):
+    def update_priorities(self, indices, priorities):
+        for idx, prio in zip(indices, priorities):
             self.priorities[idx] = prio
 
     def __len__(self):
