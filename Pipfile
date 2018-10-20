@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"72aec7c" = {file = "http://download.pytorch.org/whl/cu91/torch-0.4.0-cp36-cp36m-linux_x86_64.whl"}
 torchvision = "*"
 gym = "*"
 atari-py = ">=0.1.1"
@@ -13,6 +12,7 @@ pyopengl = "*"
 matplotlib = "*"
 visdom = "*"
 roboschool = {path = "./roboschool", editable = true}
+"6aeadf3" = {file = "http://download.pytorch.org/whl/cu92/torch-0.4.1-cp36-cp36m-linux_x86_64.whl"}
 
 [dev-packages]
 pylint = "*"
