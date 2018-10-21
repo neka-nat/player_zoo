@@ -10,6 +10,11 @@ Transition = namedtuple('Transition',
 ActorCriticData = namedtuple('ActorCriticData',
                              ('value', 'log_prob', 'reward', 'entropy'))
 
+_outsize = lambda x, f, p, s: int(x - f + 2 * p) / s + 1
+
+def outsize(x, f, p=0, s=1):
+    return (_outsize(x[0], f, p, s), _outsize(x[1], f, p, s))
+
 def preprocess(img, shape=None, gray=False):
     pil_img = Image.fromarray(img)
     if not shape is None:
