@@ -37,7 +37,7 @@ class DuelingDQN(nn.Module):
         adv = self.adv2(adv)
         val = F.relu(self.val1(x))
         val = self.val2(val)
-        return val + adv - adv.mean()
+        return val + adv - adv.mean(1, keepdim=True)
 
 BATCH_SIZE = 32
 EPS_START = 1.0
