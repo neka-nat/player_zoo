@@ -78,7 +78,7 @@ for n in range(n_episodes):
         action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
                                       policy_net, eps)
         next_state, reward, done, _ = env.step(action.item())
-        reward = torch.tensor([reward])
+        reward = torch.tensor([min(max(reward, -1.0), 1.0)])
         done = torch.tensor([float(done)])
         memory.push(torch.from_numpy(state), action,
                     torch.from_numpy(next_state), reward, done)
