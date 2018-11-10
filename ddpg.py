@@ -134,8 +134,8 @@ for n in range(n_episodes):
         env.render()
         reward = torch.tensor([reward])
         done = torch.tensor([float(done)])
-        memory.push(torch.from_numpy(state), torch.from_numpy(action),
-                    torch.from_numpy(next_state), reward, done)
+        memory.push(torch.from_numpy(state), torch.from_numpy(action), reward,
+                    torch.from_numpy(next_state), done)
         state = next_state.copy()
 
         # Perform one step of the optimization (on the target network)

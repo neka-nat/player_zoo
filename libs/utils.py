@@ -5,7 +5,7 @@ from PIL import Image
 import torch
 
 Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward', 'done'))
+                        ('state', 'action', 'reward', 'next_state', 'done'))
 
 ActorCriticData = namedtuple('ActorCriticData',
                              ('value', 'log_prob', 'reward', 'entropy'))

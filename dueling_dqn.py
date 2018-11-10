@@ -103,8 +103,8 @@ for n in range(n_episodes):
         next_state, reward, done, _ = env.step(action.item())
         reward = torch.tensor([min(max(reward, -1.0), 1.0)])
         done = torch.tensor([float(done)])
-        memory.push(torch.from_numpy(state), action,
-                    torch.from_numpy(next_state), reward, done)
+        memory.push(torch.from_numpy(state), action, reward,
+                    torch.from_numpy(next_state), done)
         vis.image(utils.preprocess(env.env._get_image()), win=win1)
         vis.image(next_state, win=win2)
         state = next_state.copy()
