@@ -28,11 +28,11 @@ Install python packages.
 pipenv install
 ```
 
-Run visdom server.
+Run a script with visdom server.
 
 ```
 pipenv shell
-python -m visdom.server
+./run.sh dqn.py
 ```
 
 ## Agents
