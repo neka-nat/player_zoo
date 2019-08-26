@@ -6,7 +6,7 @@ python -m visdom.server -logging_level WARNING &
 pids="$pids $!"
 sleep 2
 
-python $1 &
+python $@ &
 pids="$pids $!"
 
 wait -n $pids
